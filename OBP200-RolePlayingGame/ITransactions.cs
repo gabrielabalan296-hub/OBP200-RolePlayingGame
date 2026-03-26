@@ -1,5 +1,3 @@
-namespace OBP200_RolePlayingGame;
-
 public interface ITransactions
 {
     void SellMinorGems();
