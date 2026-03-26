@@ -1,7 +1,6 @@
 using System; 
 using System.Linq; 
 using System.Collections.Generic;
-using OBP200_RolePlayingGame;
 
 public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerStats, IPlayerStatus, ICombatAction
 {
