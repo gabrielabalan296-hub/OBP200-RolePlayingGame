@@ -1,4 +1,3 @@
-namespace OBP200_RolePlayingGame;
 using System;
 public class Rogue : Player
 {
