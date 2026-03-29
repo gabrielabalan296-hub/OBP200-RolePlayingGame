@@ -2,7 +2,6 @@ namespace OBP200_RolePlayingGame;
 using System;
 public class Mage : Player
 {
-    Random Rng = new Random();
     public Mage(string name)
         :base (name, "Mage", 28, 28, 10, 2, 2, 15, 0, 1)
     { }
@@ -13,7 +12,7 @@ public class Mage : Player
     }
     public override void ApplyLevelUpStats()
     {
-        MaxHealth += 4; 
+        HPSystem.MaxHealth += 4; 
         Attack += 4; 
         Defense += 1;
     }
@@ -43,11 +42,6 @@ public class Mage : Player
             specialDmg = 0;
         }
         
-        // Dämpa skada mot bossen
-        if (vsBoss)
-        {
-            specialDmg = (int)Math.Round(specialDmg * 0.8);
-        }
-        return specialDmg;
+        return BossDamageReduction(specialDmg, vsBoss);
     }
 }
