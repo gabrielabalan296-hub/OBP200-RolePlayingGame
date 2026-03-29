@@ -2,49 +2,46 @@ using System;
 using System.Linq; 
 using System.Collections.Generic;
 
-public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerStats, IPlayerStatus, ICombatAction
+public abstract class Player : IDamage, ITransactions, IHeal, IUpgradePlayerStats, IPlayerStatus, ICombatAction
 {
     // Spelarens "databas": alla värden 
     public string Name { get; set; }
     public string Class { get; set; }
-    public int Health { get; set; }
-    public int MaxHealth { get; set; }
+    public int Health => HPSystem.Health; 
+    public int MaxHealth => HPSystem.MaxHealth;
     public int Attack  { get; set; }
     public int Defense { get; set; }
     public int Gold  { get; set; }
     public int Potions { get; set; }
-    public int XP { get; set; } = 0; 
-    public int Level { get; set; } = 1;
+    public int XP => LvlSystem.XP; 
+    public int Level => LvlSystem.Level;
+    public HealthSystem HPSystem { get; set; }
+    public LevelUpSystem LvlSystem { get; set; }
 
-    private static readonly Random Rng = new Random();
+    protected static readonly Random Rng = new Random();
     public List<string> Inventory { get; set; } = new List<string>();
 
     public Player(string Name, string Class, int Health, int MaxHealth, int attack, int defense, int gold, int potions,
         int xp, int level)
     {
+        HPSystem = new HealthSystem(Health, MaxHealth);
+        LvlSystem = new LevelUpSystem(level, xp);
         this.Name = Name;
-        this.Class = Class;
-        this.Health = Health;
-        this.MaxHealth = MaxHealth;
+        this.Class = Class; 
         Attack = attack; 
         Defense = defense;
         Gold = gold;
         Potions = potions;
-        XP = xp;
-        Level = level;
         Inventory.Add( "Wooden Sword");
         Inventory.Add( "Cloth Armor" );
     }
 
-    public bool IsPlayerDead()
-    {
-        return Health <= 0;
-    }
+    public bool IsPlayerDead() => HPSystem.IsPlayerDead; 
     public abstract int UseClassSpecial(int enemyDef, bool vsBoss);
     
     public void ApplyDamageToPlayer(int dmg) 
     {
-        Health -= Math.Max(0, dmg);
+        HPSystem.ApplyDamageToPlayer(dmg);
     }
 
     public virtual int CalculatePlayerDamage(int enemyDef)
@@ -55,10 +52,20 @@ public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerSta
         
         return (baseDmg + roll);
     }
+
+    protected int BossDamageReduction(int damage, bool vsBoss)
+    {
+        // Dämpa skada mot bossen
+        if (vsBoss)
+        {
+            return (int)Math.Round(damage * 0.8);
+        }
+        return damage;
+    }
     
     public void AddPlayerXp(int amount)
     {
-        XP +=Math.Max (0, amount) ;
+        LvlSystem.AddXP(amount);
         MaybeLevelUp();
     }
     
@@ -68,7 +75,7 @@ public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerSta
     }
     public void ShowStatus()
     {
-        Console.WriteLine($"Namn: {Name}, Klass: {Class} " + $"HP: {Health} / {MaxHealth}  " + 
+    Console.WriteLine($"Namn: {Name}, Klass: {Class} " + $"HP: {Health} / {MaxHealth}  " + 
                           $"ATK: {Attack}  DEF: {Defense} Level:  {Level} " + 
                           $"XP:  {XP}  Guld: {Gold}  Drycker {Potions}");
         
@@ -80,21 +87,16 @@ public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerSta
 
     public virtual void ApplyLevelUpStats()
     {
-        MaxHealth += 4;
+        HPSystem.MaxHealth += 4;
         Attack += 3;
         Defense += 1;
     }
     public void MaybeLevelUp()
     {
-        // Nivåtrösklar
-        int nextThreshold = Level == 1 ? 10 : (Level == 2 ? 25 : (Level == 3 ? 45 : Level * 20));
-
-
-        if (XP >= nextThreshold)
+        while (LvlSystem.VerifyLevellingUp())
         {
-            Level++;
             ApplyLevelUpStats();
-            Health = MaxHealth;
+            HPSystem.RestoreToFullHealth();
 
             Console.WriteLine($"Du når nivå {Level}! Värden ökade och HP återställd.");
         }
@@ -105,28 +107,25 @@ public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerSta
         return Rng.NextDouble() < 0.25;
     }
     
-    public void UsePotion()
+    public string UsePotion()
     { 
         if (Potions <= 0) 
         { 
-            Console.WriteLine("Du har inga drycker kvar."); 
-            return; 
+            return "Du har inga drycker kvar.";
         } 
         int oldHealth = Health;
-        
         // Helning av spelaren
-        int heal = 12;
-        Health = Math.Min(MaxHealth, Health + heal); 
-        Potions = (Potions - 1); 
-        int healAmount = Health - oldHealth;
         
-        Console.WriteLine($"Du dricker en dryck och återfår {healAmount} HP."); 
+        Potions--; 
+        int healAmount = HPSystem.Heal(12);
+        
+        return $"Du dricker en dryck och återfår {healAmount} HP."; 
     }
     
     public bool DoRest()
     {
-        Console.WriteLine("Du slår läger och vilar.");
-        Health = MaxHealth;
+       Console.WriteLine ("Du slår läger och vilar.");
+        HPSystem.RestoreToFullHealth();
         Console.WriteLine("HP återställt till max.");
         return true;
     }
@@ -163,5 +162,4 @@ public abstract class Player : IDamage , ITransactions, IHeal, IUpgradePlayerSta
         AddPlayerGold(count * 5);
         Console.WriteLine($"Du säljer {count} st Minor Gem för {count * 5} guld.");
     }
-
 }
