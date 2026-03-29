@@ -8,12 +8,11 @@ public class Rogue : Player
 
     public override void ApplyLevelUpStats()
     {
-        MaxHealth+= 5; 
+        HPSystem.MaxHealth+= 5; 
         Attack += 3; 
         Defense += 1;
     }
-
-    private static readonly Random Rng = new Random();
+    
     public override int CalculatePlayerDamage(int enemyDef)
     {
         int damage = base.CalculatePlayerDamage(enemyDef);
@@ -41,12 +40,6 @@ public class Rogue : Player
             Console.WriteLine("Backstab misslyckades!");
             specialDmg = 1;
         }
-        // Dämpa skada mot bossen
-        if (vsBoss)
-        {
-            specialDmg = (int)Math.Round(specialDmg * 0.8);
-        }
-
-        return specialDmg;
+       return BossDamageReduction(specialDmg, vsBoss);
     }
 }
