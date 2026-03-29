@@ -2,15 +2,13 @@ namespace OBP200_RolePlayingGame;
 using System; 
 public class Warrior : Player 
 {
-    Random Rng = new Random();
     public Warrior(string name)
         :base (name, "Warrior", 40, 40, 7, 5, 2, 15, 0, 1)
-    {
-    }
+    {}
 
     public override void ApplyLevelUpStats()
     {
-        MaxHealth += 6; 
+        HPSystem.MaxHealth += 6; 
         Attack += 2; 
         Defense += 2;
     }
@@ -37,12 +35,6 @@ public class Warrior : Player
         specialDmg = Math.Max(2, atk + 3 - enemyDef);
         ApplyDamageToPlayer(2); // självskada
        
-        // Dämpa skada mot bossen
-        if (vsBoss)
-        {
-            specialDmg = (int)Math.Round(specialDmg * 0.8);
-        }
-        
-        return specialDmg;
+        return BossDamageReduction(specialDmg, vsBoss);
     }
 }
