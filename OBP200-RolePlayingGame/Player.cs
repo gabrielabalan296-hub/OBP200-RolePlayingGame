@@ -107,19 +107,18 @@ public abstract class Player : IDamage, ITransactions, IHeal, IUpgradePlayerStat
         return Rng.NextDouble() < 0.25;
     }
     
-    public string UsePotion()
+    public void UsePotion()
     { 
         if (Potions <= 0) 
         { 
-            return "Du har inga drycker kvar.";
+            Console.WriteLine ( "Du har inga drycker kvar.");
         } 
-        int oldHealth = Health;
         // Helning av spelaren
         
         Potions--; 
         int healAmount = HPSystem.Heal(12);
         
-        return $"Du dricker en dryck och återfår {healAmount} HP."; 
+        Console.WriteLine ( $"Du dricker en dryck och återfår {healAmount} HP."); 
     }
     
     public bool DoRest()
